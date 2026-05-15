@@ -7,15 +7,17 @@
 
 - [AGENTS.md](#agentsmd文件)
 - [Git Hook](#git-hook)
-- [Skills](#Skills)
-    - [init-codex-project (初始化项目)](#init-codex-project)
-    - [ai-aware-code-audit (面向 AI
-    主导编程的审计)](#ai-aware-code-audit)
+- [Skills](#skills)
+    - [init-codex-project](#init-codex-project) (初始化项目)
+    - [ai-aware-code-audit](#ai-aware-code-audit) (面向 AI 主导编程的审计)
 
 ### AGENTS.md文件
+
 这是 Codex 默认读取的约束名，所以把它作为本仓库的名字。
+
 Codex 设计总共有2层 `AGENTS.md`，一个在 `~/.codex/AGENTS.md`，另一个在项目的根目录里。
-注：GUI 里 Settings - Personalization - Custom instructions 指向的就是 `~/.codex/AGENTS.md`
+
+> 注：GUI 里 Settings - Personalization - Custom instructions 指向的就是 `~/.codex/AGENTS.md`
 
 主要职责：
 - 语言：回复、Implementation Plan都用中文。
