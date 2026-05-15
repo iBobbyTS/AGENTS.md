@@ -1,7 +1,16 @@
 # AGENTS.md
 个人使用的Coding Agent约束，作为备份和分享。
 
-本README纯手打，无AI，其余部分基本100%AI
+本README纯手打，无AI，其余部分基本 100%AI。
+
+## 目录
+
+- [AGENTS.md](#AGENTS.md)
+- [Git Hook](#Git-Hook（还没实战测试）)
+- [Skills](#Skills)
+    - [init-codex-project (初始化项目)](#init-codex-project)
+    - [ai-aware-code-audit (面向 AI
+    主导编程的审计)](#ai-aware-code-audit)
 
 ### AGENTS.md
 这是 Codex 默认读取的约束名，所以把它作为本仓库的名字。
