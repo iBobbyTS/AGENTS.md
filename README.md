@@ -19,13 +19,13 @@
 主要职责：
 - 语言：回复、Implementation Plan都用中文。
 - Skills：通过 `.agents/skills/` 判断用户是否初始化过这个项目，没有的话通过 [$init-codex-project](skills/init-codex-project) 进行初始化。
-    - `.agents/skills/` 是当前项目运行时常用的最佳实践，如果发现有更好的方法，Agent应该主动更新
+    - `.agents/skills/` 是当前项目运行时常用的最佳实践，如果发现有更好的方法，Agent应该主动更新。
 - 测试：除了修改文档、修改UI字符串之类的，其他逻辑修改都需要做单元测试；测试必须执行；测试不得用无意义断言。
-- 代码安全：未经要求的不回滚Agent不了解的修改；破坏性操作前先 dry run；不主动commit, push
+- 代码安全：未经要求不回滚Agent不了解的修改；破坏性操作前先 dry run；不主动commit, push。
 - Implementation Plan：批准后写入 `.agent-work/PLAN.md`，执行完成后重命名为 `PLAN.md.done`，上下文压缩后重新读取。目前Codex没有显式的逻辑证明它会保存Implementation Plan，上下文压缩后会重新读取，所以需要有这条规则。
-- Sub-agent 调度：拆分原则是 context-aware，而不是类似人工软件开发的 role-aware 分工；小任务给 `gpt-5.4-mini`，大人物给 `gpt-5.5`。高风险任务不外包。
-- 可维护性（重要）：主要是用来避免上帝对象、超大文件等问题。小功能执行完后汇报可维护性，是否增加了复杂度；大公牛执行前先判断是否需要进行Class, Function的职责拆分。
-- Docker：主要是我本地用的是colima而非 Docker Desktop，agent经常去尝试docker compose浪费token。colima比较清量，不会像 Dokcer Desktop那样一下占1-2G的内存
+- Sub-agent 调度：拆分原则是 context-aware，而不是类似人工软件开发的 role-aware 分工；小任务给 `gpt-5.4-mini`，大任务给 `gpt-5.5`。高风险任务不外包。
+- 可维护性（重要）：主要是用来避免上帝对象、超大文件等问题。小功能执行完后汇报可维护性，是否增加了复杂度；大功能执行前先判断是否需要进行Class, Function的职责拆分。
+- Docker：主要是我本地用的是colima而非 Docker Desktop，agent经常去尝试docker compose浪费token。colima比较清量，不会像 Dokcer Desktop那样一下占1-2G的内存。
 
 ### Git Hook
 
