@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI-Aware Code Audit"
+  short_description: "Audit codebases shaped by AI-assisted development"
+  default_prompt: "Use $ai-aware-code-audit to perform a full AI-aware code audit."

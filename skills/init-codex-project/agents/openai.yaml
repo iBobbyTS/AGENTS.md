@@ -1,0 +1,4 @@
+interface:
+  display_name: "Init Codex Project"
+  short_description: "Bootstrap Codex files for a repo"
+  default_prompt: "Use $init-codex-project to initialize Codex workflow files for this repository."
