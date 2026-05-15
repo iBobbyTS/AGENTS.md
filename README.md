@@ -1,7 +1,7 @@
 # AGENTS.md
 个人使用的Coding Agent约束，作为备份和分享。
 
-本README纯手打，无AI，其余部分基本 100%AI。
+本README纯手打，无AI，仓库内其余文件基本 100%AI。
 
 ## 目录
 
