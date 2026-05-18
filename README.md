@@ -8,8 +8,11 @@
 - [AGENTS.md](#agentsmd文件)
 - [Git Hook](#git-hook)
 - [Skills](#skills)
-    - [init-codex-project](#init-codex-project) (初始化项目)
-    - [ai-aware-code-audit](#ai-aware-code-audit) (面向 AI 主导编程的审计)
+    - [init-codex-project](#init-codex-project): 初始化项目
+    - [ai-aware-code-audit](#ai-aware-code-audit): 面向 AI 主导编程的审计
+    - [manual-brainstorming](#manual-brainstorming): 手动触发的brainstorming
+    - [second-pass-debugging](#second-pass-debugging): 第一次修复失败后走这个流程
+    - [receiving-code-review](#receiving-code-review): Review PR 触发
 
 ### AGENTS.md文件
 [AGENTS.md](AGENTS.md) 是 Codex 默认读取的约束名，所以把它作为本仓库的名字。Codex 设计总共有2层 `AGENTS.md`，一个在 `~/.codex/AGENTS.md`，另一个在项目的根目录里。
@@ -49,3 +52,22 @@
 #### [ai-aware-code-audit](skills/ai-aware-code-audit/)
 
 用 `Codex` 和 `ChatGPT-5.5 Extended Thinking` vibe出来的审计规则，除了传统审计的覆盖面，还包含了gpt-5.4, gpt-5.5时代AI编程可能造成的各类技术债（更早的没有参考，模型和Agent能力进化速度都很快）。
+
+> 注：下面三个skill都是根据[Superpowers](https://github.com/obra/superpowers) [v5.1.0](https://github.com/obra/superpowers/releases/tag/v5.1.0)  做的Codex-native 版本。没有照搬 Superpowers 是因为它的约束过重，对于Codex这样的高级智能体会浪费过多token，所以修改后的都是手动/条件触发，不是默认触发。
+
+#### [manual-brainstorming](skills/manual-brainstorming/)
+
+根据 `brainstorming` 修改而来，只有用户主动触发才会走这套完整的流程，避免小改动也浪费时间和token。
+
+删除了plan保存要求和plan文件的commit，继续按照 [AGENTS.md](#agentsmd文件) 就行。
+
+#### [second-pass-debugging](skills/second-pass-debugging/)
+根据 `systematic-debugging` 修改而来。只有bug第一次修复失败才会触发。
+
+先做“证据盘点”，包括上一轮改了什么、为什么没解决、现在的失败现象是什么、有没有可运行复现。然后再进原 `systematic-debugging` 的流程。
+
+#### [receiving-code-review](skills/receiving-code-review/)
+
+根据 `receiving-code-review` 修改而来。只有外部的修改，比如PR，才会走这套流程，去除了针对 subagent 的 code review，因为当前 Codex 还不支持 Orchestrator，我不想手动实现，效益可能不高，等官方即可。[AGENTS.md](#agentsmd文件) 里的subagent逻辑不需要完整的code review。
+
+判断是否可以合并：如果可以合并，先汇报给用户，写好message供用户阅读；如果不能合并，提出哪里有问题，需要怎么改，并询问用户是comment让PR提交者改还是直接改。

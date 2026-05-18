@@ -1,0 +1,4 @@
+interface:
+  display_name: "Receiving Code Review"
+  short_description: "Evaluate PR and external review feedback before merge or action."
+  default_prompt: "Use receiving-code-review to evaluate this PR feedback and decide whether it can merge."

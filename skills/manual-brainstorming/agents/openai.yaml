@@ -1,0 +1,4 @@
+interface:
+  display_name: "Manual Brainstorming"
+  short_description: "Explicitly requested design/spec workflow before implementation."
+  default_prompt: "Use manual brainstorming to clarify and design this change before implementation."
