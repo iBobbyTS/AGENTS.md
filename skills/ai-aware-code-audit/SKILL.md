@@ -7,6 +7,66 @@ description: "Use when Codex is asked to perform or finish a full codebase audit
 
 Perform a full-system audit. Do not treat this as a pre-change refactoring gate; this skill is for periodic or requested audits of the current codebase state.
 
+## Persistent Audit Artifacts
+
+For non-trivial audits, persist progress under `.agent-work/audit/` so the audit can survive context compression and be resumed without rereading already-reviewed code.
+
+### Artifact Setup
+
+After a quick repository survey, create one timestamped audit directory:
+
+```text
+.agent-work/audit/{YYYYMMDD-HHMM}/
+├── FULL.md
+└── REPORT.md
+```
+
+Also create `.agent-work/audit/CURRENT.md` while the audit is in progress.
+
+- `CURRENT.md` must point to the active timestamped audit directory and report file.
+- At the beginning, `CURRENT.md` only needs a coarse module/component outline from the initial survey.
+- As larger modules are audited, expand `CURRENT.md` with smaller submodules and update progress.
+- Delete `CURRENT.md` after `REPORT.md` is complete.
+- If continuing an interrupted audit, read `CURRENT.md` first, then read the referenced `FULL.md` before reviewing more code or reporting completion.
+
+### FULL.md Ledger
+
+Use `FULL.md` as the complete audit ledger. After each module, component, workflow, or similarly reasonable review unit, append the result immediately before moving on.
+
+Start `FULL.md` with a compact progress index:
+
+```markdown
+| Area | Status | Severity | Files | Notes |
+| --- | --- | --- | --- | --- |
+| Auth middleware | Reviewed | Must Fix | src/auth/* | Object-level permission gap |
+| Settings UI | Reviewed | No Action | app/settings/* | State and layout reviewed |
+```
+
+For every reviewed area, record:
+
+- Module, component, workflow, or subsystem name.
+- Status: `Reviewed`, `Partial`, `Skipped`, or `Needs Follow-up`.
+- Severity: `Must Fix`, `Should Plan`, `Track as Debt`, or `No Action`.
+- Scope: relevant file paths, symbols, API routes, commands, workflows, and line ranges where useful.
+- Focus: audit concerns inspected, such as permissions, state flow, concurrency, tests, architecture, tooling, or UI states.
+- Evidence: concrete code references, command outputs, test results, or observed behavior.
+- Verification: tests/checks run or manual verification still needed.
+- Gaps / Assumptions: unreviewed paths, missing evidence, or unsupported assumptions.
+
+Only areas with real findings need repair-oriented details:
+
+- Finding description.
+- Trigger or failure path.
+- Impact.
+- Recommended priority.
+- Suggested fix direction.
+
+For `No Action` areas, do not invent findings, triggers, impact, or fix recommendations. Record the reviewed scope, focus, evidence, verification, and any remaining gaps.
+
+### REPORT.md
+
+Generate `REPORT.md` only after rereading `FULL.md`. The final report should extract and prioritize actionable findings, preserve audit coverage and limitations, and include assumptions, human-review needs, and verification gaps. Do not rely on conversation memory as the source of the final report.
+
 ## General Audit Areas
 
 ### Structure and Module Boundaries
