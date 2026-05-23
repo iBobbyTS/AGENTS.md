@@ -1,0 +1,4 @@
+interface:
+  display_name: "Large Refactor Review"
+  short_description: "Review large refactors and architecture transitions"
+  default_prompt: "Use $large-refactor-audit to review this large refactor for abstraction balance, state correctness, boundary coverage, manual verification, and UX fit."
