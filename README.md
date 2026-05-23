@@ -8,9 +8,11 @@
 - [AGENTS.md](#agentsmd文件)
 - [Git Hook](#git-hook)
 - [Skills](#skills)
-    - [init-codex-project](#init-codex-project): 初始化项目
     - [ai-aware-code-audit](#ai-aware-code-audit): 面向 AI 主导编程的审计
+    - [init-codex-project](#init-codex-project): 初始化项目
+    - [large-refactor-audit](#large-refactor-audit): 大规模重构代码的review
     - [manual-brainstorming](#manual-brainstorming): 手动触发的brainstorming
+    - [manual-git-worktrees](#manual-git-worktrees): 手动分出git worktree实现功能
     - [second-pass-debugging](#second-pass-debugging): 第一次修复失败后走这个流程
     - [receiving-code-review](#receiving-code-review): Review PR 触发
 
@@ -42,6 +44,13 @@
 
 ### Skills
 
+#### [ai-aware-code-audit](skills/ai-aware-code-audit/)
+
+用 `Codex` 和 `ChatGPT-5.5 Extended Thinking` vibe出来的审计规则，除了传统审计的覆盖面，还包含了gpt-5.4, gpt-5.5时代AI编程可能造成的各类技术债（更早的没有参考，模型和Agent能力进化速度都很快）。
+> 没有下面这一条约束，大项目会陷入死循环。Agent倾向于读完所有代码，分析完所有模块再写报告，一旦超出上下文就会触发软件自动压缩，之前的分析结果会丢失，必须重新读代码。
+
+审计过程：先阅读项目，了解大致结构，然后创建 `.agent-work/audit/{YYYYMMDD-HHMM}` 文件夹，在这里面放 `FULL.md`，实时保存审计结果，审计进度保存在 `.agent-work/audit/CURRENT.md` 里，审计结束后再根据 `FULL.md` 生成 `REPORT.md`。
+
 #### [init-codex-project](skills/init-codex-project/)
 
 初始化项目，根据项目采用的技术栈，创建项目级 AGENTS.md 文件，定下：
@@ -49,9 +58,12 @@
 - git提交语言、UI语言
 - ...... (它按我的要求自动创建完我还没审查)
 
-#### [ai-aware-code-audit](skills/ai-aware-code-audit/)
+#### [large-refactor-audit](skills/large-refactor-audit/)
 
-用 `Codex` 和 `ChatGPT-5.5 Extended Thinking` vibe出来的审计规则，除了传统审计的覆盖面，还包含了gpt-5.4, gpt-5.5时代AI编程可能造成的各类技术债（更早的没有参考，模型和Agent能力进化速度都很快）。
+底层重构、大面积代码改动提交前使用这个skill进行review。
+已包含对传统的review面和ai代码纰漏的检查。
+
+审计过程会实时保存，原因和流程见 [ai-aware-code-audit](#ai-aware-code-audit)。
 
 > 注：下面三个skill都是根据[Superpowers](https://github.com/obra/superpowers) [v5.1.0](https://github.com/obra/superpowers/releases/tag/v5.1.0)  做的Codex-native 版本。没有照搬 Superpowers 是因为它的约束过重，对于Codex这样的高级智能体会浪费过多token，所以修改后的都是手动/条件触发，不是默认触发。
 
@@ -60,6 +72,10 @@
 根据 `brainstorming` 修改而来，只有用户主动触发才会走这套完整的流程，避免小改动也浪费时间和token。
 
 删除了plan保存要求和plan文件的commit，继续按照 [AGENTS.md](#agentsmd文件) 就行。
+
+#### [manual-git-worktree](skills/manual-git-worktree/)
+
+根据 `using-git-worktrees` 修改而来，只有用户主动触发才会走git worktree开发。
 
 #### [second-pass-debugging](skills/second-pass-debugging/)
 根据 `systematic-debugging` 修改而来。只有bug第一次修复失败才会触发。
