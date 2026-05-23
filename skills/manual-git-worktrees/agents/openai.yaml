@@ -1,0 +1,7 @@
+interface:
+  display_name: "Manual Git Worktrees"
+  short_description: "Explicitly requested isolated worktree setup."
+  default_prompt: "Use $manual-git-worktrees to set up an isolated git worktree for this task."
+
+policy:
+  allow_implicit_invocation: false
