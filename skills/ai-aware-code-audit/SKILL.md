@@ -7,6 +7,13 @@ description: "Use when Codex is asked to perform or finish a full codebase audit
 
 Perform a full-system audit. Do not treat this as a pre-change refactoring gate; this skill is for periodic or requested audits of the current codebase state.
 
+## Language And Formatting
+
+- `FULL.md` must be written in English and is the agent-facing audit ledger.
+- `REPORT.md` must be written in Chinese and is the user-facing audit report.
+- 保留文件路径、代码符号、命令名、错误信息和证据原文，不要翻译它们。
+- `Maintenance-Audit: true` 这个 commit trailer 必须保持英文原样，不要翻译。
+
 ## Persistent Audit Artifacts
 
 For non-trivial audits, persist progress under `.agent-work/audit/` so the audit can survive context compression and be resumed without rereading already-reviewed code.
@@ -65,7 +72,7 @@ For `No Action` areas, do not invent findings, triggers, impact, or fix recommen
 
 ### REPORT.md
 
-Generate `REPORT.md` only after rereading `FULL.md`. The final report should extract and prioritize actionable findings, preserve audit coverage and limitations, and include assumptions, human-review needs, and verification gaps. Do not rely on conversation memory as the source of the final report.
+Generate `REPORT.md` only after rereading `FULL.md`. The final report must be written in Chinese. It should extract and prioritize actionable findings, preserve audit coverage and limitations, and include assumptions, human-review needs, and verification gaps. Do not rely on conversation memory as the source of the final report.
 
 ## General Audit Areas
 
@@ -74,6 +81,7 @@ Generate `REPORT.md` only after rereading `FULL.md`. The final report should ext
 - Identify god objects, oversized files, long functions, deeply nested branching, and modules with unclear ownership.
 - Check whether dependency direction, layering, and boundaries match the existing architecture.
 - Look for duplicate helpers, parallel abstractions, and bypasses around established service, component, or utility layers.
+- Check for consistency drift: three or more same-purpose implementations, undocumented reusable entry points, or code that bypasses documented project conventions for shared behavior.
 - Flag AI-generated patterns that solve a local problem by adding more in-place logic instead of reusing or extending the architecture.
 
 ### Functional Correctness
@@ -123,6 +131,7 @@ Generate `REPORT.md` only after rereading `FULL.md`. The final report should ext
 ### AI-Assisted Development Artifacts
 
 - Look for duplicated patterns, duplicated components, repeated utility functions, and near-identical tests created by local prompting.
+- Flag local patch drift where a feature adds a second formatter, chart layer, state owner, request/error handler, or similar shared concern instead of extending an existing or documented path.
 - Flag brittle logic that appears optimized to pass current tests rather than express the intended behavior.
 - Review plausible but unverified fallbacks, compatibility layers, swallowed errors, invented configuration keys, environment variables, or conventions.
 - Check whether generated code introduced broad permissions, hidden data movement, or unreviewed external assumptions.
@@ -196,6 +205,7 @@ After identifying findings, the agent must check whether complexity can be reduc
 - Identify code that can be deleted.
 - Identify duplicated logic that can be merged.
 - Identify new abstractions that should instead reuse existing layers.
+- Check for premature abstraction as well as duplication: when similar logic appears fewer than three times and does not affect high-risk semantics such as permissions, APIs, time/date, money, units, persistence, or error handling, avoid recommending a shared helper solely for tidiness.
 - Identify fallback or compatibility code that should be removed rather than preserved.
 - Prefer smaller, reversible fixes over broad rewrites.
 
@@ -210,28 +220,28 @@ When the repository includes agent configuration, automation scripts, MCP setup,
 - Check whether tool configuration is documented well enough for another developer to reproduce the workflow.
 
 
-## Output Format
+## Output Format for `REPORT.md`
 
-### Agent Verification
-- Repository state checked: yes/no, with evidence.
-- Diffs reviewed: yes/no, with scope.
-- Tests run: command, result, and limitations.
-- Tests not run: reason.
-- High-risk workflows inspected.
-- Assumptions.
-- Human review required.
-- Known stale context or conflicting evidence.
-The agent must not mark a finding as resolved unless the fix is visible in code and supported by verification evidence.
+### 审计验证
+- 仓库状态已检查：是/否，附证据。
+- 差异已审阅：是/否，附范围。
+- 已运行测试：命令、结果与限制。
+- 未运行测试：原因。
+- 已检查高风险流程。
+- 假设。
+- 需要人工复核。
+- 已知过时上下文或冲突证据。
+除非修复在代码中可见且有验证证据支持，否则不要把某个发现标记为已解决。
 
-### General Findings
-Lead with findings, ordered by severity. Use concrete file references when available. Classify each finding as one of:
+### 主要发现
+先列出发现，按严重性排序。能给出具体文件引用时就给出。将每个发现归类为以下之一：
 
-- `Must Fix`: security issues, data loss/corruption risks, severe functional errors, or structural problems that already block reliable development.
-- `Should Plan`: meaningful debt, test gaps, maintainability hotspots, or design risks that are not urgent but should be scheduled.
-- `Track as Debt`: acceptable short-term tradeoffs that need an owner, trigger condition, or follow-up marker.
-- `No Action`: reviewed areas that are reasonable for the current project size and risk profile.
+- `必须修复`：安全问题、数据丢失/损坏风险、严重功能错误，或已经阻碍可靠开发的结构性问题。
+- `需要规划`：有意义的技术债、测试缺口、可维护性热点，或不紧急但应排期处理的设计风险。
+- `记录为技术债`：可接受的短期折中，但需要负责人、触发条件或后续标记。
+- `无需处理`：就当前项目规模和风险画像而言，已审阅区域是合理的。
 
-Include a brief summary of overall system health, strongest areas, highest-risk areas, and recommended next audit focus.
+补充一段简短总结，说明系统整体健康状况、最稳固的部分、最高风险区域，以及下一轮建议审计的重点。
 
 When committing completed audit work, include this trailer exactly once in the commit message:
 

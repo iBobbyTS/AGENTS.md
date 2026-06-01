@@ -4,6 +4,7 @@
 
 - Reply in Chinese by default, unless I explicitly ask for English or another language.
 - Write Implementation Plans in Chinese by default, unless I explicitly ask for English or another language.
+- When asked `Please review my uncommitted changes`, reply also in Chinese. 
 
 ## Scope And Project Setup
 
@@ -22,6 +23,7 @@
 - Cover real behavior and meaningful edge cases; do not add assertions that only execute code without verifying outcomes.
 - Run the relevant checks before finishing when the environment permits it. If checks cannot run, explain the blocker clearly.
 - For browser or UI work, use the repository's existing validation workflow when it exists.
+- Before adding behavior that may span multiple pages, modules, or workflows, inspect project docs and existing implementations for a documented shared convention or reusable entry point. Prefer extending that path and avoid creating parallel implementations.
 
 ## Safety
 
@@ -33,7 +35,7 @@
 
 - When I ask for an Implementation Plan, write it in Chinese by default.
 - After I approve an Implementation Plan, write the complete Markdown plan to `.agent-work/PLAN.md`.
-- When the implementation is complete, rename `.agent-work/PLAN.md` to `.agent-work/PLAN.md.done`, then ask whether the test results are satisfactory and whether `.agent-work/PLAN.md.done` should be deleted.
+- When the implementation is complete, rename `.agent-work/PLAN.md` to `.agent-work/PLANS/{YYYYMMDD-HHMM}.md`.
 - If context is compacted or plan memory may be incomplete, reread `.agent-work/PLAN.md` before continuing.
 
 ## Subagents
@@ -46,31 +48,10 @@
 
 ## Maintainability Guardrails
 
-- Do not turn every code change into an architecture review. For small, local, mechanical, or documentation-only changes, proceed normally and include only a one-line maintainability judgment in the final response.
-  Example: `维护性判断：低风险，本次改动局限在单一模块，未新增共享状态、跨模块耦合或复杂分支。`
-
-- For every non-trivial implementation, include a concise `维护性判断` section in the final response. It should cover:
-  - affected modules and ownership boundaries
-  - whether the change introduced or expanded shared mutable state, cross-module coupling, large branching, duplicated logic, large-file growth, or implicit state flow
-  - whether the relevant tests cover the changed behavior
-  - whether a follow-up refactor, audit, or test expansion is recommended
-
-- Before editing, perform a brief maintainability preflight only when the requested change is likely to:
-  - add or modify shared mutable state
-  - touch persistence, concurrency, security, routing, background jobs, core services, or UI state flow
-  - add branches to an already-large switch/case, reducer, coordinator, service, view model, or controller
-  - add substantial code to a file that is already large or hard to reason about
-  - span more than 3 modules, or require roughly more than 150 lines of implementation
-  - duplicate existing logic instead of extending a clear local abstraction
-  - change behavior without an obvious regression-test surface
-
-- If the preflight finds that implementing the requested feature directly would worsen an existing god object, oversized file, unclear state owner, circular dependency, fragile state machine, or under-tested core path, pause before editing. Explain the specific risk, point to the relevant files or modules, and recommend the smallest enabling refactor plus the tests needed to protect it. Do not propose a broad rewrite unless explicitly requested.
-
-- Small changes should not be blocked by speculative refactoring. If the risk is low, implement the change first and mention any minor cleanup as optional follow-up.
-
-- For large or risky changes, prefer this sequence:
-  1. identify the current ownership/state boundary
-  2. add or verify regression tests around the existing behavior
-  3. make the smallest necessary refactor if direct implementation would increase complexity materially
-  4. implement the requested behavior
-  5. report the maintainability impact in the final response
+- Small, local, mechanical, or documentation-only changes should proceed normally. In the final response, include only a one-line maintainability judgment.
+- For non-trivial implementations, include a concise `维护性判断` covering affected modules, ownership boundaries, complexity introduced, test coverage, and whether follow-up cleanup is recommended.
+- Before editing, do a brief maintainability preflight only when the change touches persistence, security, routing, background jobs, concurrency, shared UI state, core services, more than 3 modules, roughly more than 150 lines, or an already-large coordinator/controller/view model.
+- If the preflight finds that a direct change would materially worsen a god object, unclear state owner, fragile state machine, circular dependency, duplicated logic, or under-tested core path, pause before editing. Explain the specific risk and recommend the smallest enabling refactor plus protective tests.
+- Apply the rule of three before introducing new shared helpers, components, or services: when the same or closely similar goal appears in three or more places, prefer a shared abstraction and document its use in the project docs. For one-off or two-place duplication, keep the change local unless it affects a high-risk semantic boundary.
+- High-risk semantic boundaries, such as security, permissions, API clients, time/date, money, units, persistence, and error handling, should be checked for an existing single source of truth even before three repetitions.
+- Prefer this sequence for large or risky changes: identify ownership/state boundary, add or verify regression coverage, make the smallest needed refactor, implement the behavior, then report maintainability impact.

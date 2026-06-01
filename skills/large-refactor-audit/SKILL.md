@@ -48,6 +48,8 @@ Generate `REPORT.md` only after rereading `NOTES.md`. The report should prioriti
 3. Check transitional abstractions for balance:
    - too much indirection for the current scope
    - too little abstraction for repeated logic or duplicated state
+   - parallel implementations that bypass documented shared entry points
+   - premature shared layers where the rule of three is not met and no high-risk semantic boundary is involved
    - temporary compatibility layers that should already be removable
 4. Review correctness:
    - business-rule drift
@@ -68,6 +70,7 @@ Generate `REPORT.md` only after rereading `NOTES.md`. The report should prioriti
 
 - Over-abstracted transition layers that obscure the actual behavior
 - Under-abstracted rewrites that duplicate logic or state in multiple places
+- Refactors that create parallel implementations, bypass documented shared conventions, violate the rule of three, or turn small local duplication into a new layer without a high-risk semantic reason
 - Incorrect or incomplete business semantics
 - Missing boundary tests or unverified failure paths
 - Manual-test gaps on the highest-risk workflows
