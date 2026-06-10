@@ -1,4 +1,4 @@
 interface:
   display_name: "Second Pass Debugging"
-  short_description: "Systematic root-cause workflow after a failed fix attempt."
-  default_prompt: "Use second-pass debugging; the previous fix did not resolve the bug."
+  short_description: "Root-cause debugging with persistent notes."
+  default_prompt: "Use $second-pass-debugging; the previous fix did not resolve the bug."

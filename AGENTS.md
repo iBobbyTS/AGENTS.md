@@ -37,6 +37,7 @@
 - After I approve an Implementation Plan, write the complete Markdown plan to `.agent-work/PLAN.md`.
 - When the implementation is complete, rename `.agent-work/PLAN.md` to `.agent-work/PLANS/{YYYYMMDD-HHMM}.md`.
 - If context is compacted or plan memory may be incomplete, reread `.agent-work/PLAN.md` before continuing.
+- For long debugging sessions, repeated experiments, second-pass fixes, or debugging likely to survive context compaction, proactively use `$second-pass-debugging` skill.
 
 ## Subagents
 
