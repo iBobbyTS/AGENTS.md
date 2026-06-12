@@ -1,0 +1,7 @@
+interface:
+  display_name: "Feishu Message Sender"
+  short_description: "Send signed Feishu progress reports"
+  default_prompt: "Use $feishu-message-sender to send me task progress updates for this work."
+
+policy:
+  allow_implicit_invocation: false

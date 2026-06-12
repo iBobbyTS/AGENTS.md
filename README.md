@@ -1,6 +1,5 @@
 # AGENTS.md
-个人使用的Coding Agent约束，作为备份和分享。
-
+个人使用的Coding Agent约束，作为备份和分享。<br>
 本README纯手打，无AI，仓库内其余文件基本 100%AI。
 
 ## 目录
@@ -30,7 +29,7 @@
 - Implementation Plan：批准后写入 `.agent-work/PLAN.md`，执行完成后重命名为 `PLAN.md.done`，上下文压缩后重新读取。目前Codex没有显式的逻辑证明它会保存Implementation Plan，上下文压缩后会重新读取，所以需要有这条规则。
 - Sub-agent 调度：拆分原则是 context-aware，而不是类似人工软件开发的 role-aware 分工；小任务给 `gpt-5.4-mini`，大任务给 `gpt-5.5`。高风险任务不外包。
 - 可维护性（重要）：主要是用来避免上帝对象、超大文件等问题。小功能执行完后汇报可维护性，是否增加了复杂度；大功能执行前先判断是否需要进行Class, Function的职责拆分。
-- Docker：主要是我本地用的是colima而非 Docker Desktop，agent经常去尝试docker compose浪费token。colima比较清量，不会像 Dokcer Desktop那样一下占1-2G的内存。
+- Docker：主要是我本地用的是`colima`而非 Docker Desktop，agent经常去尝试`docker compose`浪费token。colima比较轻量，不会像 Dokcer Desktop 那样一下占1-2G的内存。
 
 ### Git Hook
 
@@ -51,6 +50,12 @@
 
 审计过程：先阅读项目，了解大致结构，然后创建 `.agent-work/audit/{YYYYMMDD-HHMM}` 文件夹，在这里面放 `FULL.md`，实时保存审计结果，审计进度保存在 `.agent-work/audit/CURRENT.md` 里，审计结束后再根据 `FULL.md` 生成 `REPORT.md`。
 
+#### [feishu-message-sender](skills/feishu-message-sender)
+
+建议长任务时使用，不要让agent在前台轮询。使用这个skill它会复制一份模板脚本，然后编辑脚本并后台启动，用你的飞书机器人发送一条任务开始通知、每小时的进度汇报、任务结束总结。<br>
+机器人配置放在 `~/.config/feishu-message-sender/secret.json`，格式为`{"webhook":"https://open.feishu.cn/open-apis/bot/v2/hook/xxxxxxxxxx","secret":"签名秘钥","name":"本电脑的名字"}`。<br>
+飞书官方：[自定义机器人使用指南](https://open.feishu.cn/document/client-docs/bot-v3/add-custom-bot?lang=zh-CN)（给agent看的话用[md版本](https://open.feishu.cn/document/client-docs/bot-v3/add-custom-bot.md)）
+
 #### [init-codex-project](skills/init-codex-project/)
 
 初始化项目，根据项目采用的技术栈，创建项目级 AGENTS.md 文件，定下：
@@ -61,16 +66,14 @@
 #### [large-refactor-audit](skills/large-refactor-audit/)
 
 底层重构、大面积代码改动提交前使用这个skill进行review。
-已包含对传统的review面和ai代码纰漏的检查。
-
+已包含对传统的review面和ai代码纰漏的检查。<br>
 审计过程会实时保存，原因和流程见 [ai-aware-code-audit](#ai-aware-code-audit)。
 
-> 注：下面三个skill都是根据[Superpowers](https://github.com/obra/superpowers) [v5.1.0](https://github.com/obra/superpowers/releases/tag/v5.1.0)  做的Codex-native 版本。没有照搬 Superpowers 是因为它的约束过重，对于Codex这样的高级智能体会浪费过多token，所以修改后的都是手动/条件触发，不是默认触发。
+> 注：下面4个skill都是根据[Superpowers](https://github.com/obra/superpowers) [v5.1.0](https://github.com/obra/superpowers/releases/tag/v5.1.0)  做的 “Codex-native” 版本。没有照搬 Superpowers 是因为它的约束过重，对于Codex这样的高级智能体会浪费过多token，所以修改后的都是手动/条件触发，不是默认触发。
 
 #### [manual-brainstorming](skills/manual-brainstorming/)
 
-根据 `brainstorming` 修改而来，只有用户主动触发才会走这套完整的流程，避免小改动也浪费时间和token。
-
+根据 `brainstorming` 修改而来，只有用户主动触发才会走这套完整的流程，避免小改动也浪费时间和token。<br>
 删除了plan保存要求和plan文件的commit，继续按照 [AGENTS.md](#agentsmd文件) 就行。
 
 #### [manual-git-worktree](skills/manual-git-worktree/)
@@ -78,12 +81,11 @@
 根据 `using-git-worktrees` 修改而来，只有用户主动触发才会走git worktree开发。
 
 #### [second-pass-debugging](skills/second-pass-debugging/)
-根据 `systematic-debugging` 修改而来。只有bug第一次修复失败才会触发。
-
-先做“证据盘点”，包括上一轮改了什么、为什么没解决、现在的失败现象是什么、有没有可运行复现。然后再进原 `systematic-debugging` 的流程。
+根据 `systematic-debugging` 修改而来。只有bug第一次修复失败才会触发。<br>
+先做“证据盘点”，包括上一轮改了什么、为什么没解决、现在的失败现象是什么、有没有可运行复现。然后再进原 `systematic-debugging` 的流程。<br>
+新增流程：把试错过程记录在`.agent-work/debug`下，避免疑难杂症经历过多次上下文压缩后忘记之前试过的错误路径。
 
 #### [receiving-code-review](skills/receiving-code-review/)
 
-根据 `receiving-code-review` 修改而来。只有外部的修改，比如PR，才会走这套流程，去除了针对 subagent 的 code review，因为当前 Codex 还不支持 Orchestrator，我不想手动实现，效益可能不高，等官方即可。[AGENTS.md](#agentsmd文件) 里的subagent逻辑不需要完整的code review。
-
+根据 `receiving-code-review` 修改而来。只有外部的修改，比如PR，才会走这套流程，去除了针对 subagent 的 code review，因为当前 Codex 还不支持 Orchestrator，我不想手动实现，效益可能不高，等官方即可。[AGENTS.md](#agentsmd文件) 里的subagent逻辑不需要完整的code review。<br>
 判断是否可以合并：如果可以合并，先汇报给用户，写好message供用户阅读；如果不能合并，提出哪里有问题，需要怎么改，并询问用户是comment让PR提交者改还是直接改。
