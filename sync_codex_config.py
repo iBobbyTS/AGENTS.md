@@ -130,10 +130,19 @@ def sync_codex_files(repo: Path, codex_home: Path) -> list[str]:
     return synced
 
 
-def deploy_after_pull(repo: Path, codex_home: Path) -> bool:
-    if not pull_repository(repo):
-        print("No git updates found; exiting without syncing.")
-        return False
+def deploy_after_pull(repo: Path, codex_home: Path, force: bool = False) -> bool:
+    try:
+        did_update = pull_repository(repo)
+    except SyncError as exc:
+        if not force:
+            raise
+        print(f"git pull did not complete ({exc}); syncing because --force was set.")
+    else:
+        if not did_update and not force:
+            print("No git updates found; exiting without syncing.")
+            return False
+        if force:
+            print("Syncing after git pull because --force was set.")
 
     synced = sync_codex_files(repo, codex_home)
     print(f"Synced {len(synced)} item(s) into {codex_home.expanduser()}:")
@@ -146,8 +155,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Run git pull for this repository, then sync AGENTS.md and skills/* "
-            "into ~/.codex only when the pull changed HEAD."
+            "into ~/.codex when the pull changed HEAD or --force is set."
         )
+    )
+    parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="Sync after git pull even when the pull found no update or failed.",
     )
     parser.add_argument(
         "--repo",
@@ -167,7 +182,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     try:
-        deploy_after_pull(args.repo, args.codex_home)
+        deploy_after_pull(args.repo, args.codex_home, force=args.force)
     except SyncError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
