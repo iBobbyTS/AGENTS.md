@@ -8,6 +8,8 @@
 - [Git Hook](#git-hook)
 - [Skills](#skills)
     - [ai-aware-code-audit](#ai-aware-code-audit): 面向 AI 主导编程的审计
+    - [debug-notes-to-engineering-notes](#debug-notes-to-engineering-notes): 仅在官方文档不全/有误时才使用，结合[second-pass-debugging](#second-pass-debugging)，燃烧自己的token，为后人照亮debug之路
+    - [feishu-message-sender](#feishu-message-sender): 飞书自定义机器人在长任务里定时汇报
     - [init-codex-project](#init-codex-project): 初始化项目
     - [large-refactor-audit](#large-refactor-audit): 大规模重构代码的review
     - [manual-brainstorming](#manual-brainstorming): 手动触发的brainstorming
@@ -49,6 +51,10 @@
 > 没有下面这一条约束，大项目会陷入死循环。Agent倾向于读完所有代码，分析完所有模块再写报告，一旦超出上下文就会触发软件自动压缩，之前的分析结果会丢失，必须重新读代码。
 
 审计过程：先阅读项目，了解大致结构，然后创建 `.agent-work/audit/{YYYYMMDD-HHMM}` 文件夹，在这里面放 `FULL.md`，实时保存审计结果，审计进度保存在 `.agent-work/audit/CURRENT.md` 里，审计结束后再根据 `FULL.md` 生成 `REPORT.md`。
+
+#### [debug-notes-to-engineering-notes](skills/debug-notes-to-engineering-notes)
+
+使用[second-pass-debugging](#second-pass-debugging)修完问题后把 `.agent-work/debug` 里的记录沉淀到 `docs/engineering-notes`，方便后续开发和其他人阅读。会记录正确做法、错误尝试记录、和官方文档不符的部分、版本记录。不包含项目/实现约定。
 
 #### [feishu-message-sender](skills/feishu-message-sender)
 

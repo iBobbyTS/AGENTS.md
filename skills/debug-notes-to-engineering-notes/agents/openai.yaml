@@ -1,0 +1,4 @@
+interface:
+  display_name: "Debug Notes To Engineering Notes"
+  short_description: "Turn debug records into reusable notes"
+  default_prompt: "Use $debug-notes-to-engineering-notes to turn .agent-work/debug records into reusable engineering notes."
