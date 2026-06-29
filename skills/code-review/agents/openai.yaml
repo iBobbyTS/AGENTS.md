@@ -1,0 +1,4 @@
+interface:
+  display_name: "Code Review"
+  short_description: "Review code changes and merge risk"
+  default_prompt: "Use $code-review to review this PR or diff for correctness, maintainability, tests, and merge risk."
