@@ -1,356 +1,282 @@
 ---
 name: code-audit
-description: "Use when Codex is asked to perform or finish a full codebase audit, architecture audit, technical-debt audit, maintainability audit, security audit, over-engineering/de-bloat audit, or audit of an AI-assisted or AI-generated codebase. Focus on traditional engineering risks plus AI-agent failure modes such as local-optimum patches, duplicated abstractions, over-mocked tests, fragile fallbacks, unnecessary dependencies, and unreviewed generated logic. After an audit is complete, any commit that records the audit result must include the commit-message trailer `Maintenance-Audit: true`."
+description: "Perform or continue a periodic full-system codebase audit covering architecture, correctness, security, reliability, operations, supply chain, maintainability, technical debt, anti-bloat, and AI-agent-specific risks. Use for scheduled audits after sustained development, risk reassessment, architecture or security audits, and remediation-enabled audit loops that must preserve coverage state across runs instead of rescanning the entire repository after every fix."
 ---
 
 # Code Audit
 
-Perform a full-system audit. Do not treat this as a pre-change refactoring gate; this skill is for periodic or requested audits of the current codebase state.
+Audit the current system as a maintained product, not merely a diff. Use durable risk and coverage state so periodic audits deepen over time instead of restarting from zero.
 
-For AI-agent-specific risks, ground the audit in current official product behavior, current repository configuration, and observed code. Do not rely on stale folklore about older model limitations unless the repository still shows that failure mode.
+## Boundary
 
-## Language And Formatting
+- Use this skill for periodic or explicitly requested codebase/system audits.
+- Do not use it as the default merge gate for one bounded pull request; use `$code-review` for that.
+- Audit actual repository, runtime, delivery, and agent-tooling behavior. Do not equate a static scan or clean test run with a complete audit.
+- Treat an audit as risk sampling unless a defined baseline proves exhaustive coverage.
+- Repair only when the user explicitly authorizes remediation.
+- Preserve user work and repository history. Do not reset, merge, push, deploy, or change production systems unless explicitly asked.
 
-- `FULL.md` must be written in English and is the agent-facing audit ledger.
-- `REPORT.md` must be written in Chinese and is the user-facing audit report.
-- 保留文件路径、代码符号、命令名、错误信息和证据原文，不要翻译它们。
-- `Maintenance-Audit: true` 这个 commit trailer 必须保持英文原样，不要翻译。
+## Load References Progressively
 
-## Persistent Audit Artifacts
+- Read [references/audit-profile-template.md](references/audit-profile-template.md) only when creating, revising, or explaining a project audit profile.
+- Read [references/audit-coverage.md](references/audit-coverage.md) when selecting audit domains and scenarios.
+- Read [references/ai-agent-risk-catalog.md](references/ai-agent-risk-catalog.md) when agents materially create, review, deploy, or operate the repository, or when the repository ships agent functionality.
+- Read [references/audit-loop-protocol.md](references/audit-loop-protocol.md) for periodic scope selection, remediation loops, freshness, invalidation, and reset rules.
+- Read [references/anti-bloat.md](references/anti-bloat.md) when simplification, deletion, over-engineering, unnecessary dependencies, or YAGNI is in scope.
+- Read [references/ledger-templates.md](references/ledger-templates.md) before creating or updating persistent audit artifacts.
 
-For non-trivial audits, persist progress under `.agent-work/audit/` so the audit can survive context compression and be resumed without rereading already-reviewed code.
+## Persistent Audit System
 
-### Artifact Setup
-
-After a quick repository survey, create one timestamped audit directory:
+Use this structure for non-trivial audits:
 
 ```text
-.agent-work/audit/{YYYYMMDD-HHMM}/
-├── FULL.md
-└── REPORT.md
+.agent-work/audit/
+├── PROFILE.md                 # when docs/audit-profile.md is not appropriate
+├── SYSTEM-MAP.md
+├── COVERAGE.md
+├── FINDINGS.md
+├── CURRENT.md                 # active run only
+└── runs/
+    └── {YYYYMMDD-HHMM}/
+        ├── SCOPE.md
+        ├── EVIDENCE.md
+        └── REPORT.md
 ```
 
-Also create `.agent-work/audit/CURRENT.md` while the audit is in progress.
+Prefer `docs/audit-profile.md` when project documentation is versioned and repository rules allow it. Do not create duplicate profiles.
 
-- `CURRENT.md` must point to the active timestamped audit directory and report file.
-- At the beginning, `CURRENT.md` only needs a coarse module/component outline from the initial survey.
-- As larger modules are audited, expand `CURRENT.md` with smaller submodules and update progress.
-- Delete `CURRENT.md` after `REPORT.md` is complete.
-- If continuing an interrupted audit, read `CURRENT.md` first, then read the referenced `FULL.md` before reviewing more code or reporting completion.
+Keep `SYSTEM-MAP.md`, `COVERAGE.md`, and `FINDINGS.md` durable across audit cycles. Store run-specific evidence under `runs/`. Delete `CURRENT.md` only after the run report is complete.
 
-### FULL.md Ledger
+## Establish the Audit Profile
 
-Use `FULL.md` as the complete audit ledger. After each module, component, workflow, or similarly reasonable review unit, append the result immediately before moving on.
-
-Start `FULL.md` with a compact progress index:
-
-```markdown
-| Area | Status | Severity | Files | Notes |
-| --- | --- | --- | --- | --- |
-| Auth middleware | Reviewed | Must Fix | src/auth/* | Object-level permission gap |
-| Settings UI | Reviewed | No Action | app/settings/* | State and layout reviewed |
-```
-
-For every reviewed area, record:
-
-- Module, component, workflow, or subsystem name.
-- Status: `Reviewed`, `Partial`, `Skipped`, or `Needs Follow-up`.
-- Severity: `Must Fix`, `Should Plan`, `Track as Debt`, or `No Action`.
-- Scope: relevant file paths, symbols, API routes, commands, workflows, and line ranges where useful.
-- Focus: audit concerns inspected, such as permissions, state flow, concurrency, reliability, release safety, tests, architecture, tooling, agent harnesses, MCP/connectors, agent memory/state, or UI states.
-- Evidence: concrete code references, command outputs, test results, or observed behavior.
-- Verification: tests/checks run or manual verification still needed.
-- Gaps / Assumptions: unreviewed paths, missing evidence, or unsupported assumptions.
-
-Only areas with real findings need repair-oriented details:
-
-- Finding description.
-- Trigger or failure path.
-- Impact.
-- Recommended priority.
-- Suggested fix direction.
-
-For `No Action` areas, do not invent findings, triggers, impact, or fix recommendations. Record the reviewed scope, focus, evidence, verification, and any remaining gaps.
-
-### REPORT.md
-
-Generate `REPORT.md` only after rereading `FULL.md`. The final report must be written in Chinese. It should extract and prioritize actionable findings, preserve audit coverage and limitations, and include assumptions, human-review needs, and verification gaps. Do not rely on conversation memory as the source of the final report.
-
-## Project Audit Profile
-
-Before a non-trivial audit, look for a project-specific audit profile in this order:
+Look for the profile in this order:
 
 1. `docs/audit-profile.md`
 2. `AUDIT_PROFILE.md`
 3. `.agent-work/audit/PROFILE.md`
 
-If a profile exists, read it before creating the timestamped audit directory and use it as the stable baseline for scope, sampling, risk ranking, and required coverage. The profile sets minimum coverage, not a ceiling: still follow evidence, user instructions, and newly discovered risks.
+If none exists:
 
-If no profile exists, read `references/audit-profile-template.md`, copy its template into `docs/audit-profile.md` when project docs are versioned and repo rules allow it; otherwise copy it into `.agent-work/audit/PROFILE.md` as a draft. Then ask the user to define or approve the unknown fields before proceeding beyond the initial survey. If the user asks to continue immediately, mark the profile `Draft`, proceed with explicit assumptions, and list the missing profile decisions in `REPORT.md`.
+1. Read `references/audit-profile-template.md`.
+2. Create a draft in the first repository-appropriate location.
+3. Record explicit assumptions for unknown fields.
+4. Ask the user to approve material risk, business, regulatory, or scope choices before deep auditing when those choices change prioritization.
+5. If instructed to proceed immediately, continue under `Draft` status and surface every material assumption in `REPORT.md`.
 
-Do not put feature requirements or implementation plans in the profile. It should define audit direction: system class, risk tolerance, quality attributes, control baselines, required evidence, and sampling rules.
+The profile defines minimum coverage, risk tolerance, quality attributes, critical workflows, control baselines, evidence expectations, and sampling rules. It does not define feature requirements or implementation plans.
 
-Read `references/audit-profile-template.md` only when creating, updating, or explaining an audit profile. Do not load the template for every audit when a project profile already exists.
+## Choose Baseline or Periodic Mode
 
-## General Audit Areas
+Use `Baseline` when:
 
-### Audit Framing and Sampling
+- No trustworthy system map or coverage state exists.
+- The project has never received this audit.
+- A reset trigger invalidated broad prior conclusions.
+- The user explicitly requests a comprehensive new baseline.
 
-- Start from the project audit profile, then identify any missing business-critical workflows, crown-jewel data, external trust boundaries, expensive failure modes, owners, operational history, and recent high-churn areas.
-- Define quality attributes before judging architecture: correctness, security, reliability, modifiability, performance, operability, portability, and cost. Record which attributes matter most for this system.
-- Use scenario-based architecture review for important systems: for each high-risk scenario, describe the stimulus, environment, expected response, architectural decisions involved, tradeoffs, and evidence.
-- Sample beyond files that look complex. Include public entry points, auth/permission gates, persistence boundaries, migrations, integration points, background jobs, release paths, observability, and rollback paths.
-- Rank findings by user/business impact, exploitability or likelihood, blast radius, reversibility, evidence strength, and whether the issue is systemic or isolated.
+Use `Periodic` when durable audit state is trustworthy. Do not perform a whole-repository rescan merely because 30–50 commits accumulated.
 
-### Structure and Module Boundaries
+In periodic mode, derive scope from:
 
-- Identify god objects, oversized files, long functions, deeply nested branching, and modules with unclear ownership.
-- Check whether dependency direction, layering, and boundaries match the existing architecture.
-- Look for duplicate helpers, parallel abstractions, and bypasses around established service, component, or utility layers.
-- Check for consistency drift: three or more same-purpose implementations, undocumented reusable entry points, or code that bypasses documented project conventions for shared behavior.
-- Check ownership, extension points, API stability, dependency cycles, and whether architecture decisions are captured in code, ADRs, docs, or tests.
-- Flag AI-generated patterns that solve a local problem by adding more in-place logic instead of reusing or extending the architecture.
+1. Always-on critical surfaces from the profile.
+2. Changed/high-churn areas since the last audit.
+3. Areas invalidated by dependencies, contracts, incidents, or prior repairs.
+4. Rotating deep slices whose freshness is due.
+5. Open findings, accepted debt, prior gaps, and production/test failures.
+6. End-to-end scenarios crossing multiple components.
 
-### Functional Correctness
+Commit count is a trigger to reassess risk, not the unit of audit coverage.
 
-- Review core user workflows, business rules, edge cases, error paths, retries, and empty states.
-- Check whether recent features regress older behavior.
-- Look for implementations that run successfully but encode the wrong product or domain semantics.
-- Trace critical invariants from input validation through domain logic, persistence, side effects, and user-visible output.
-- Check backward compatibility, versioned contracts, import/export behavior, and how partial failure affects user or data state.
+## Phase 0: Reconcile Repository Reality
 
-### UI and UX
+- Inspect `git status`, current branch/head, relevant recent commits, tags/releases, and deployment/configuration state available in the repository.
+- Read `CURRENT.md` before continuing an interrupted run.
+- Reconcile persistent ledgers with files, symbols, architecture, and workflows that still exist.
+- Mark stale evidence and invalidated coverage explicitly.
+- Identify generated/vendor directories and exclusions with rationale.
+- Record which runtime environments, tests, scanners, logs, metrics, incidents, and external systems are accessible.
 
-- Review layout, responsiveness, accessibility, loading states, empty states, error states, and disabled/submitting/selected interaction states.
-- Check for visual or interaction-style drift introduced by incremental AI changes.
-- Flag pages where new controls or panels were stacked onto the UI without preserving information architecture.
+Never rely on a previous audit report, agent summary, or commit message as proof of current behavior.
 
-### Data and State Management
+## Phase 1: Build or Refresh the System Map
 
-- Review schemas, migrations, default values, validation boundaries, cache invalidation, persistence, and derived state.
-- Check whether there is a single source of truth for important state.
-- Flag duplicated state, stale cached data, inconsistent normalization, and validation that only happens in the UI or caller.
-- Check data classification, retention, deletion, audit logs, backup/restore assumptions, privacy boundaries, and irreversible data transformations.
+Map the system at a level useful for risk decisions:
 
-### Concurrency, Async, and Thread Safety
+- Users, operators, business workflows, crown-jewel data, secrets, money, and privileged actions.
+- External interfaces and trust boundaries.
+- Domains/modules, ownership, dependency direction, and public contracts.
+- Data stores, schemas, migrations, caches, queues, jobs, and state machines.
+- Deployment topology, environments, configuration, feature flags, observability, backups, and recovery.
+- CI/CD, dependencies, build provenance, release artifacts, and third-party services.
+- Agent identities, prompts, skills, MCP/connectors/plugins, memory, sandboxes, tool/network permissions, evals, and autonomous actions.
 
-- Review race conditions, cancellation, re-entrancy, stale responses overwriting newer state, duplicate submissions, and task cleanup.
-- Check timers, subscriptions, streams, workers, background jobs, locks, transactions, and idempotency boundaries.
-- Flag state machines that became less predictable because fixes added more flags instead of clarifying transitions.
+Update only what changed or was previously unknown. Preserve history when architecture transitions matter.
 
-### Data Security and Permissions
+## Phase 2: Plan Risk-Based Coverage
 
-- Review authentication, authorization, tenant isolation, object-level permissions, input validation, output encoding, file paths, external URLs, and command execution.
-- Check whether secrets, tokens, personal data, or sensitive business data can leak through logs, errors, caches, telemetry, generated files, frontend bundles, or agent/tool output.
-- Check secure-by-default behavior, threat models, abuse cases, attack surface reduction, least privilege, defense in depth, vulnerability disclosure/response, and whether security requirements are traced into implementation and tests.
-- Review dependency, script, network, and supply-chain risks introduced by agentic development.
+Read `references/audit-coverage.md` and create `SCOPE.md`.
 
-### Release, Operations, and Reliability
+For every selected area, record:
 
-- Review deployment topology, environment separation, configuration, feature flags, database migration sequencing, backward/forward compatibility, rollback, and emergency-disable paths.
-- Check whether critical services define SLOs or equivalent reliability targets, error budgets or release risk policies, and user-facing indicators for availability and correctness.
-- Audit observability for the highest-risk workflows: logs, metrics, traces, dashboards, alert quality, latency, traffic, errors, saturation, and whether alerts map to actionable runbooks.
-- Review backups, restores, disaster recovery, idempotency, retry policies, queue recovery, rate limits, backpressure, graceful degradation, and incident-response evidence.
+- Why it is in scope: critical, changed, invalidated, rotating, incident-driven, debt follow-up, or scenario dependency.
+- Quality attributes and failure scenarios under review.
+- Files, interfaces, workflows, runtime evidence, and expected tests.
+- Coverage depth and exclusions.
+- Evidence needed to mark the area `Fresh`.
 
-### Performance, Capacity, and Cost
+Use scenario-based review for critical workflows. State the stimulus, environment, expected response, architectural decisions, tradeoffs, and evidence.
 
-- Review bottlenecks, query plans, N+1 patterns, pagination, batch sizes, cache behavior, payload sizes, cold starts, memory/CPU growth, and third-party latency.
-- Check whether load assumptions, benchmarks, limits, budgets, and capacity plans match observed or expected usage.
-- Flag performance fixes that trade away correctness, security, maintainability, or operability without explicit evidence.
+Do not sample only complex-looking files. Include entry points, auth/permission gates, persistence, migrations, background work, integrations, release/rollback, observability, and recovery.
 
-### Software Supply Chain and Build Integrity
+## Phase 3: Perform Broad Discovery Before Remediation
 
-- Review direct and transitive dependencies, lockfiles, unsupported runtimes, licenses, vendored code, generated code, package scripts, and build-time network access.
-- Check whether releases have reproducible or traceable build provenance, artifact integrity, SBOM or dependency inventory where appropriate, and a process for dependency vulnerability response.
-- Audit CI/CD permissions, artifact signing, release promotion, environment secrets, protected branches/tags, and whether build outputs can be tampered with after review.
+Audit selected areas through independent lenses before changing code:
 
-### Test and Validation Quality
+1. Business correctness and critical workflow invariants.
+2. Architecture and quality-attribute tradeoffs.
+3. Identity, authorization, privacy, trust boundaries, and abuse paths.
+4. Data lifecycle, migrations, consistency, backup, restore, retention, and deletion.
+5. Concurrency, jobs, queues, retries, idempotency, and partial failure.
+6. Reliability, deployment, rollback, degraded mode, observability, and incident recovery.
+7. Performance, capacity, quotas, and cost.
+8. Dependencies, build integrity, CI/CD permissions, provenance, and release artifacts.
+9. Tests, evals, scanners, validation integrity, and evidence quality.
+10. Maintainability, ownership, documentation, technical debt, and anti-bloat.
+11. AI-agent repository, harness, autonomy, prompt-injection, memory, and tool risks when applicable.
 
-- Check whether tests verify real behavior rather than implementation details or smoke execution.
-- Flag over-mocking that hides integration failures.
-- Review coverage of happy paths, failure paths, edge cases, permissions, migrations, concurrency, integration boundaries, rollback/recovery, performance-critical paths, and UI states.
-- Check the test portfolio balance: fast unit tests for local logic, integration tests for contracts and persistence, and end-to-end or system tests for critical user workflows.
-- Check CI, linting, type checks, browser/UI validation, and flaky-test risks.
-- Check whether agent-authored or auto-fix changes weakened validation by deleting negative tests, narrowing fixtures, disabling scanners, skipping flaky-but-important checks, or moving high-risk checks outside required CI.
-- Treat a clean AI review, scanner result, or agent self-review as one signal in a layered verification system, not as proof that the codebase is safe.
+For each area:
 
-### Maintainability and Evolution Risk
+- Generate failure hypotheses.
+- Validate or falsify them from code, configuration, history, tests, runtime evidence, or authoritative documentation.
+- Append evidence immediately to `EVIDENCE.md` and update persistent coverage.
+- Deduplicate findings by root cause and assign stable IDs such as `AUD-001`.
+- Record `No Action` coverage without inventing findings.
 
-- Identify hotspots where future changes require understanding too many unrelated modules.
-- Review naming, comments, documentation, and domain intent.
-- Review ownership, onboarding path, ADRs, runbooks, architectural diagrams, public contracts, and whether comments explain durable intent rather than stale implementation details.
-- Assess whether current boundaries can support the next likely features without concentrated risk.
-- Separate acceptable local complexity from structural debt that will compound.
-- Check whether high-velocity agent work has left areas that no maintainer can explain from repo-local docs, tests, and code history. Classify this as maintainability risk when future humans or agents cannot safely extend the area.
+## Finding Classification
 
-### AI-Assisted Development Artifacts
+Use one severity:
 
-- Look for duplicated patterns, duplicated components, repeated utility functions, and near-identical tests created by local prompting.
-- Flag local patch drift where a feature adds a second formatter, chart layer, state owner, request/error handler, or similar shared concern instead of extending an existing or documented path.
-- Flag brittle logic that appears optimized to pass current tests rather than express the intended behavior.
-- Review plausible but unverified fallbacks, compatibility layers, swallowed errors, invented configuration keys, environment variables, or conventions.
-- Check whether generated code introduced broad permissions, hidden data movement, or unreviewed external assumptions.
-- Measure quality beyond pass/fail: code reuse, redundant files, dependency count, public API growth, complexity/churn hotspots, and whether repeated agent changes make the next change easier or harder.
-- Check whether agents repeatedly copied a weak pattern because it already existed. If so, recommend codifying the intended rule in docs, tests, linting, generators, or cleanup tasks rather than fixing only one instance.
-- Flag agent-friendly but system-hostile code: verbose scaffolding that improves local legibility while obscuring ownership, compatibility branches that are never exercised, and generated docs or plans that no longer match executable behavior.
+- `Must Fix`: security, privacy, data loss/corruption, serious correctness, unsafe deployment/recovery, or structural risk that already prevents reliable development.
+- `Should Plan`: meaningful architecture, reliability, test, operational, ownership, or maintainability risk requiring scheduled work.
+- `Track as Debt`: acceptable bounded compromise with owner, ceiling, and revisit trigger.
+- `No Action`: reviewed area is reasonable for the approved profile and current evidence.
 
-### Agent-First Repository Knowledge
+Use one decision class:
 
-- Audit `AGENTS.md`, skills, rules, prompts, planning docs, architecture docs, and generated reference files as part of the system when agents use them to make changes.
-- Prefer a short agent entry point that routes to maintained sources of truth over a large instruction file that mixes stale rules, product intent, and task-specific history.
-- Check whether repository knowledge is versioned, discoverable, cross-linked, and mechanically refreshed when code changes.
-- Flag stale agent instructions, obsolete plans, undocumented conventions, and external knowledge that agents rely on but cannot inspect from the repository.
-- Check whether generated reports, plans, diagrams, and summaries are clearly separated from authoritative docs and excluded from production artifacts when appropriate.
+- `Needs Decision`: business semantics, risk tolerance, control baseline, architecture tradeoff, or acceptable operational behavior requires human authority.
+- `Agent-Fixable`: intended outcome and constraints are sufficiently established.
+- `External Blocker`: required environment, production evidence, owner input, or third-party state is unavailable.
 
-### Agentic Security and Autonomy
+Rank findings by business/user impact, exploitability or likelihood, blast radius, reversibility, evidence strength, systemic reach, and remediation cost—not by code size or scanner severity alone.
 
-- Build or verify a project-specific threat model before prioritizing security findings: assets, trust boundaries, untrusted inputs, privileged actions, data flows, and realistic attacker paths.
-- Audit AI-agent identities, service accounts, CI tokens, workflow permissions, approval modes, sandbox profiles, network allowlists, and human-in-the-loop gates. Agent identities should be separate from developer identities, scoped, revocable, and auditable.
-- Treat sandboxing, model-based approval classifiers, AI reviewers, and secret scanners as defense-in-depth layers. Flag configurations where any one layer is treated as sufficient for destructive commands, production data, deployments, or secrets.
-- Check for prompt-injection and cross-domain instruction risks wherever agents read untrusted content: issue bodies, PR comments, docs, webpages, tool output, logs, emails, support tickets, generated files, or third-party MCP responses.
-- Review MCP servers, plugins, skills, hooks, browser tools, local control planes, and remote connectors for source trust, version pinning, least privilege, egress controls, tool allowlists, command execution, and secret exposure.
-- Check whether local control planes, loopback services, browser extensions, sockets, and webhooks require authentication and authorization before executing file, process, network, or deployment actions.
-- Do not trust `localhost`, same-origin, or developer-machine access as a security boundary when an agent can browse untrusted content or execute code on the same host.
-- Flag agent workflows that can modify their own permissions, rules, hooks, CI gates, review requirements, or security scanners without separate human review.
+## Remediation-Enabled Mode
 
-### Agent Evaluation and Observability
+Repair only when authorized.
 
-Use this section when the repository builds, configures, or operates agents, agent hooks, security bots, code-review bots, or automation templates.
+1. Freeze accepted finding IDs, root cause, evidence, and acceptance criteria.
+2. Resolve blocking `Needs Decision` items before selecting a repair direction.
+3. Batch the smallest coherent remediation wave.
+4. Preserve unrelated repository state.
+5. Add the strongest affordable regression or control at the root-cause boundary.
+6. Re-audit only the remediation delta, invalidated dependency cones, and affected scenarios.
+7. Run a full reset only when a reset trigger fires.
 
-- Check whether the project defines success criteria for agent behavior beyond task completion: "does not break existing behavior", "does what was asked", "keeps security invariants", and "keeps maintainability within budget".
-- Audit evals, regression suites, model-upgrade gates, transcript review, production monitoring, and human calibration for agent workflows. Flag agent changes that ship without a baseline or rollback signal.
-- Check whether agent logs, traces, transcripts, memory, and stored findings are retained long enough for debugging but scrubbed of secrets and personal data.
-- Review deduplication, suppression, snooze, and memory mechanisms for security or quality findings. Flag systems where an agent can permanently hide a finding without accountable human review.
-- Verify that agent-generated PRs, patches, or remediation tasks pass the same required checks as human changes and cannot mark themselves complete solely through their own summary.
+A repair agent cannot close its own finding by explanation. Closure requires current code/configuration plus independent or phase-separated verification evidence.
 
-### Ponytail-Derived Anti-Bloat Focus
+## Coverage Freshness and Invalidation
 
-Use this focus when the audit request mentions over-engineering, bloat, de-bloat, unnecessary complexity, unnecessary dependencies, "what can we delete", YAGNI, or a repo/module getting too large.
+Use these states in `COVERAGE.md`:
 
-When this focus applies, read `references/anti-bloat.md` before the simplification pass and use its ladder, tags, source discipline, and safety boundaries in `FULL.md` and `REPORT.md`.
+- `Fresh`: required scope and evidence were reviewed against the recorded head/environment.
+- `Stale`: time, churn, dependency age, or missing runtime evidence reduces confidence but no direct contradiction exists.
+- `Invalidated`: a change, incident, contract, architecture, or finding directly breaks the previous conclusion.
+- `Unknown`: no trustworthy evidence exists.
 
-## Agent Verification
+Do not assign fake precision such as “82% secure.” Record concrete surfaces, evidence, dates/commits, and invalidation triggers.
 
-### Repository Reality Check
+When an audited component changes, invalidate only dependent conclusions that can actually be affected. Use the dependency and scenario relationships in `SYSTEM-MAP.md`.
 
-Before reporting audit completion, the agent must verify the current repository state directly.
+## Full-Baseline Reset Triggers
 
-- Run or inspect the equivalent of `git status`.
-- Review relevant staged, unstaged, and recent committed diffs.
-- Confirm which files were actually changed, added, deleted, or left untouched.
-- Do not rely on previous task summaries, implementation-agent claims, or stale conversation context as proof.
-- If the repository state contradicts the previous plan or agent summary, treat the repository state as authoritative.
+Start a new baseline when one or more holds:
 
-### Evidence Discipline
+- Major architecture, runtime, language, framework, platform, or deployment-topology shift.
+- Data model, identity, authorization, tenant-isolation, or privacy model redesign.
+- New crown-jewel data, regulated scope, privileged action, or materially different risk tolerance.
+- Critical dependency, build/release system, agent platform, MCP/tooling, or autonomy model changes.
+- Major incident, data loss, security event, or audit evidence disproves broad assumptions.
+- Persistent ledgers are missing, corrupt, irreconcilably stale, or refer to a materially different system.
+- Remediation rewrites broad boundaries such that targeted invalidation cannot credibly bound the impact.
 
-Every finding must include concrete evidence where possible.
+Record why the baseline reset was necessary and which historical findings remain relevant.
 
-- Prefer file paths, function names, class names, API routes, migrations, tests, commands, and observed outputs.
-- Mark unsupported claims as assumptions.
-- Mark missing evidence as an audit gap.
-- Do not claim that a workflow, test, migration, or UI state works unless it was inspected or run.
-- Do not claim that a previous agent completed work unless the result is visible in code, tests, logs, or git history.
+## Prevent Technical-Debt Recurrence
 
-### Stale State and Context Drift
+When the same issue class recurs, do not schedule another identical scan as the primary response.
 
-Check for signs that previous AI-agent work was based on stale assumptions.
+Promote an evidence-backed recurring rule into a durable control when appropriate:
 
-- Reports mention files that no longer exist.
-- Completion summaries do not match the current diff.
-- Tests were described as passing but no command output or CI result is available.
-- Old architectural assumptions remain in comments, docs, prompts, or generated reports.
-- The code contains compatibility layers, fallbacks, or flags added to preserve behavior that no longer exists.
+- Structural/static lint.
+- Boundary schema/type validation.
+- Regression, property, integration, chaos, or recovery test.
+- Shared policy/authorization/error-handling entry point.
+- Generator/template correction.
+- CI/release guardrail.
+- Short repository rule linked to an authoritative source.
+- Quality grade or recurring targeted cleanup task.
 
-Classify stale-state findings as:
-- `Must Fix` if they affect runtime behavior, security, migrations, data correctness, or deployment.
-- `Should Plan` if they mainly affect maintainability, documentation, or developer understanding.
-- `Track as Debt` if they are harmless but should be removed later.
+Call this a `golden principle candidate` in `FINDINGS.md`. Require an invariant, owner, enforcement mechanism, false-positive assessment, and retirement/update path.
 
-### Agent-Generated Code Smell Detection
+Prefer continuous small cleanup over rare giant de-bloat rewrites. Apply `references/anti-bloat.md` when requested, but never delete security controls, migration safeguards, data-loss prevention, accessibility basics, meaningful tests, or real operational knobs merely to reduce line count.
 
-Look specifically for patterns commonly introduced by AI coding agents.
+## Verification and Stop Conditions
 
-- Near-duplicate helpers, components, services, schemas, or tests.
-- Parallel abstractions that solve the same problem in different places.
-- Generic fallback logic that hides real errors.
-- Broad `try/catch` blocks that swallow failures.
-- Configuration keys, environment variables, or conventions that are invented but undocumented.
-- Comments that explain intent but do not match the implementation.
-- Tests that validate mocks rather than real behavior.
-- Code that appears optimized to satisfy current tests rather than express domain logic.
-- Large rewrites that replace working architecture without clear justification.
+Complete an audit run only when:
 
-### Independent Verification Pass
+- Every in-scope area has a coverage status, evidence, and gap record.
+- Every reported finding has a reachable failure path or concrete structural/operational evidence.
+- Mandatory critical scenarios have been traced or explicitly blocked.
+- Authorized remediations have code-visible/config-visible closure evidence.
+- Relevant tests, scanners, runtime checks, or manual validations were run, or missing evidence is explicit.
+- Persistent `SYSTEM-MAP.md`, `COVERAGE.md`, and `FINDINGS.md` reflect current repository reality.
+- The final report states sampling limits and never implies unaudited areas are safe.
 
-The agent must perform an independent verification pass after reviewing implementation details.
+Use the remediation convergence rules in `references/audit-loop-protocol.md`. At the hard cap, block with a diagnosis—missing profile decision, weak oracle, inaccessible production evidence, architecture conflict, unstable base, or repeated systemic failure—not a generic request to keep looping.
 
-- Re-run available tests when feasible.
-- Inspect failing, skipped, or newly added tests.
-- Check whether tests cover real integration boundaries, not only mocked behavior.
-- Review the highest-risk workflows end to end from entry point to persistence or output.
-- Verify migrations, background jobs, permissions, and destructive operations with extra scrutiny.
-- If tests cannot be run, state why and list the manual or CI checks still required.
+## Delegation Boundary
 
-### Subagent Audit Prompting
-
-When the main agent asks a subagent to perform an independent audit pass, pass only:
+For an independent audit executor, an orchestrator may pass only:
 
 ```text
 Audit {working path}, [$code-audit]({user home dir}/.codex/skills/code-audit/SKILL.md)
 ```
 
-Do not pass extra instructions, summaries, suspected issues, expected focus areas, prior conclusions, or main-agent analysis unless the user explicitly specifies them. Keep the subagent prompt minimal to maximize independent variation and increase the chance of finding different latent issues.
+Do not leak prior suspected findings into an independent discovery pass unless the user explicitly requests a targeted audit.
 
-### Simplification Pass
+A subagent receiving that minimal prompt is already the audit executor and must not delegate the same audit again.
 
-After identifying findings, the agent must check whether complexity can be reduced.
+For remediation, pass exact authorized finding IDs and frozen acceptance criteria. For final verification, provide current system scope and authoritative profile, but delay prior rationalizations until after independent inspection.
 
-- Identify code that can be deleted.
-- Identify duplicated logic that can be merged.
-- Identify new abstractions that should instead reuse existing layers.
-- Check for premature abstraction as well as duplication: when similar logic appears fewer than three times and does not affect high-risk semantics such as permissions, APIs, time/date, money, units, persistence, or error handling, avoid recommending a shared helper solely for tidiness.
-- Identify fallback or compatibility code that should be removed rather than preserved.
-- Prefer smaller, reversible fixes over broad rewrites.
+## Report
 
-### Agent Runtime and Tooling Audit
+Write agent-facing persistent artifacts in English. Write each run’s `REPORT.md` in Chinese. Preserve file paths, symbols, commands, errors, evidence text, and finding IDs verbatim.
 
-When the repository includes agent configuration, automation scripts, MCP setup, CI scripts, or development tooling, audit them as part of the system.
+The report must include:
 
-- Apply the agentic security checks above to tooling as shipped infrastructure, not merely developer convenience.
-- Check whether scripts, generated reports, plans, and temporary files can leak secrets or enter production bundles.
-- Check whether tool configuration is documented enough for another developer to reproduce the workflow.
+- Audit mode: `Baseline` or `Periodic`.
+- Profile status and material assumptions.
+- Repository state and audit range.
+- Scope-selection rationale: critical, changed, invalidated, rotating, incident-driven, and debt follow-up.
+- Quality attributes and end-to-end scenarios reviewed.
+- Tests, scanners, runtime/operational evidence, and gaps.
+- Findings ordered by severity and risk basis.
+- Authorized repairs and verification by finding ID.
+- Coverage freshness updates and next rotation priorities.
+- System health summary, strongest areas, highest risks, and human decisions.
 
+Do not mark a finding resolved unless closure is visible in the current repository/configuration and supported by verification evidence.
 
-## Output Format for `REPORT.md`
-
-### 审计验证
-- 仓库状态已检查：是/否，附证据。
-- 差异已审阅：是/否，附范围。
-- 审计范围与抽样依据：覆盖的模块、入口、数据流、运行/发布路径，以及未覆盖原因。
-- 关键质量属性：本次按哪些属性排序风险，例如正确性、安全、可靠性、可维护性、性能、运维性、成本。
-- 已运行测试：命令、结果与限制。
-- 未运行测试：原因。
-- 已检查高风险流程。
-- 已检查发布/回滚/观测/恢复路径。
-- 假设。
-- 需要人工复核。
-- 已知过时上下文或冲突证据。
-除非修复在代码中可见且有验证证据支持，否则不要把某个发现标记为已解决。
-
-### 主要发现
-先列出发现，按严重性排序。能给出具体文件引用时就给出。将每个发现归类为以下之一：
-
-- `必须修复`：安全问题、数据丢失/损坏风险、严重功能错误，或已经阻碍可靠开发的结构性问题。
-- `需要规划`：有意义的技术债、测试缺口、可维护性热点，或不紧急但应排期处理的设计风险。
-- `记录为技术债`：可接受的短期折中，但需要负责人、触发条件或后续标记。
-- `无需处理`：就当前项目规模和风险画像而言，已审阅区域是合理的。
-
-补充一段简短总结，说明系统整体健康状况、最稳固的部分、最高风险区域，以及下一轮建议审计的重点。
-
-### 风险排序依据
-简要说明本报告如何按业务影响、用户影响、数据/资金/安全风险、发生概率、爆炸半径、可逆性、证据强度、系统性程度和修复成本排序。不要只按代码行数、文件大小或主观代码味道排序。
-
-When committing completed audit work, include this trailer exactly once in the commit message:
+When committing completed audit work, include this trailer exactly once:
 
 ```text
 Maintenance-Audit: true

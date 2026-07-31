@@ -2,7 +2,12 @@
 
 Use this template when a project has no audit profile or when the user asks to define or revise one.
 
-Field rationale:
+## Contents
+
+1. [Field Rationale](#field-rationale)
+2. [Project Audit Profile Template](#project-audit-profile-template)
+
+## Field Rationale
 
 - NIST CSF Profiles: current/target posture, tiers, outcomes, governance, and supply-chain context.
 - NIST RMF and SP 800-53B tailoring: system categorization, mission/business context, impact, risk tolerance, and tailored baselines.
@@ -11,6 +16,8 @@ Field rationale:
 - SEI ATAM: quality-attribute scenarios and architecture tradeoff evaluation.
 - AWS Well-Architected and Google SRE: workload boundary, operational excellence, reliability, SLOs, error budgets, observability, and improvement actions.
 - SLSA/OpenSSF: source, dependency, build provenance, and artifact integrity expectations.
+
+## Project Audit Profile Template
 
 ```markdown
 # Project Audit Profile
