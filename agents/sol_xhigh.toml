@@ -1,0 +1,7 @@
+name = "sol_xhigh"
+description = "Use Extra High reasoning effort for planning, reviewing, or when the user explicitly asks for sol_xhigh"
+model = "gpt-5.6-sol"
+model_reasoning_effort = "xhigh"
+
+developer_instructions = """
+"""

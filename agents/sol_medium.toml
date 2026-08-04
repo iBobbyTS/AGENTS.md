@@ -1,0 +1,7 @@
+name = "sol_medium"
+description = "Use Medium reasoning effort for executing, or when the user explicitly asks for sol_medium"
+model = "gpt-5.6-sol"
+model_reasoning_effort = "medium"
+
+developer_instructions = """
+"""
