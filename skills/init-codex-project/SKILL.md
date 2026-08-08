@@ -29,8 +29,8 @@ Initialize a repository with Codex-native project guidance while keeping global 
    - Use normal file-editing tools such as `apply_patch` after the user approves generated content.
    - Do not pass commit, localization, documentation, validation, or project-shape decisions through `scripts/init_codex_project.py`.
    - When a repository opts into git-based maintainability reminders, record the local audit cadence in repo config with `git config --local codex.maintainabilityAuditInterval <N>`. If `HEAD` exists and the user did not request an audit-marker-only baseline, also run `git config --local codex.maintainabilityAuditBaseline <current-head-sha>`.
-   - Keep the executable hook implementation in the shared user-level hooks directory configured by global `core.hooksPath`. Repository state must stay repository-local through git config and git history; do not store per-repository audit counters in the shared hook directory.
-   - The shared hook should be non-blocking and should print a reminder on relevant hookable git state changes. Before the interval is reached, it prints `建议<N>次后进行项目审计。` where `<N>` is the remaining commit count. Once the interval is reached or exceeded, it prints `上次审计是<N>次前，建议尽快安排审计。` where `<N>` is the number of commits since the latest audit marker or baseline.
+   - When this repository-managed hook package is available, copy `.githooks/` and `scripts/install-git-hooks.sh` into the initialized repository, then have the user run the installation script. The script must set repository-local `core.hooksPath=.githooks`; repository state stays in local Git config and Git history, not in `.githooks/`.
+   - The repository-managed hook must be non-blocking and should print a reminder on relevant hookable git state changes. Before the interval is reached, it prints `建议<N>次后进行项目审计。` where `<N>` is the remaining commit count. Once the interval is reached or exceeded, it prints `上次审计是<N>次前，建议尽快安排审计。` where `<N>` is the number of commits since the latest audit marker or baseline.
    - When `docs/README.md` exists or has just been created, place any documentation-update requirement in the repository-level `AGENTS.md`, not in the user-level `~/.codex/AGENTS.md`.
    - If the repository is developed inside Docker, use the appropriate container for project work and do not use local `bun`, `npx`, `python`, or similar runtime commands.
 4. Use the bundled script only for optional Linear/Symphony workflow files.
@@ -51,7 +51,7 @@ Generate most files directly at runtime from repository context:
 
 - `AGENTS.md`: long-lived repository rules synthesized from repo facts and user decisions.
 - `.codex/config.toml`: stable executable/default configuration only when needed.
-- Repository git hook policy: repository-local audit cadence stored in `codex.maintainabilityAuditInterval`, optional repository-local baseline stored in `codex.maintainabilityAuditBaseline`, and no executable hook code inside the repository unless the user explicitly asks for repo-local hooks.
+- Repository git hook policy: repository-local audit cadence stored in `codex.maintainabilityAuditInterval`, optional repository-local baseline stored in `codex.maintainabilityAuditBaseline`, and the repository-managed `.githooks/` package is installed through `scripts/install-git-hooks.sh` when opted in.
 - `.agents/skills/<project-skill>/SKILL.md`: project-specific reusable workflow detail; frontmatter must contain only `name` and `description`.
 
 Use the bundled script only for optional workflow orchestration:

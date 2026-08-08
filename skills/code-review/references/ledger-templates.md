@@ -44,6 +44,11 @@ Delete `CURRENT.md` only after the final report is complete.
 
 ## 1. Baseline
 
+- Review mode: `STANDARD | SECTION | DELTA | INTEGRATION`
+- Feature/section/checkpoint: `<name or N/A>`
+- Feature contract and section contract: `<paths/revisions or N/A>`
+- Dependency heads and declared deferred work: `<records or N/A>`
+
 - Repository:
 - Review target: PR | commit range | staged diff | unstaged diff
 - Base branch/commit:
@@ -292,9 +297,14 @@ Start with compact indexes, then keep one stable section per root-cause finding.
 ```markdown
 # 代码审查报告
 
-## 合并结论
+## 审查结论
 
-`mergeable` | `not mergeable` | `insufficient evidence`
+- `SECTION`：`section-accepted | section-blocked | insufficient-evidence`，并明确说明该结论不代表完整功能可合并。
+- `DELTA`：`delta-verified | delta-blocked | reset-required | insufficient-evidence`。
+- 中途 `INTEGRATION` checkpoint：`checkpoint-passed | checkpoint-blocked | checkpoint-insufficient-evidence`。
+- 最终 `INTEGRATION`/普通审查：`mergeable | not mergeable | insufficient evidence`。
+
+`<mode-correct verdict>`
 
 一句话说明当前结论及最高风险。
 

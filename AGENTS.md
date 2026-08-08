@@ -29,6 +29,7 @@
 - Preserve user work. Do not remove, reset, or revert changes I did not ask you to remove.
 - Before destructive operations such as `git clean`, `git reset`, or equivalent commands, run the appropriate dry run and inspect the output.
 - Do not commit, push, or create pull requests unless I explicitly ask for that action.
+- Scoped exception: when `$sectioned-feature-development` is triggered for an implementation task, it is explicitly authorized to create/switch the feature branch and make the bounded implementation and repair commits required by that skill without separate per-commit approval. This exception does not authorize push, merge, pull-request creation, history rewriting, reset, clean, or deletion of user work.
 - If I only say `提交` or `commit` without extra instructions, inspect the files to in work space, exclude folders that shouldn't be tracked like tmp, output, results (it depends), system files like `.DS_Store`, `desktop.ini` should be excluded. Then execute `git add -A && git commit -m "type(scope): description" -m "detail"` directly with an appropriate Conventional Commit message; do not add post checks, status audits, or other commit preparation unless I explicitly ask for them.
 
 ## Plans
@@ -43,11 +44,8 @@
 
 - Small, local, mechanical, or documentation-only changes should proceed normally. In the final response, include only a one-line maintainability judgment.
 - For non-trivial implementations, include a concise `维护性判断` covering affected modules, ownership boundaries, complexity introduced, test coverage, and whether follow-up cleanup is recommended. 
-- If it's a non-trivial change and edits may exceed 300 lines or more, must:
-  - Use a git branch for it. 
-  - Divide them into more reviewable sections. 
-  - Write an implementation plan with sections properly divided into `.agent-work/PLAN-FULL.md`. 
-  - Do the following to implement the non-trivial code change: {extract the current section from `.agent-work/PLAN-FULL.md`, write into `.agent-work/PLAN.md`; spawn a subagent using the `sol-medium` profile, ask it to implement `.agent-work/PLAN.md`; perform a commit; loop {use a clean `sol_xhigh` subagent to perform $code-review, result must be written to `.agent-work/reviews`; If no issue is found in the current round and the previous round: stop the loop; Use a `sol_high` subagent to fix the issue based on the document; commit the fix}; delete `.agent-work/PLAN.md`}. move `.agent-work/PLAN-FULL.md` to `.agent-work/plans/{YYYYMMDD-HHMM}_FULL.md`. 
+- For a non-trivial implementation, must use `$sectioned-feature-development` when any of the following applies: expected behavioral edits may exceed roughly 300 lines; more than 3 modules, packages, services, pages, or workflows are affected; the change crosses a high-risk semantic boundary; architecture or state ownership changes; the impact cone is difficult to bound; or a previous whole-change implementation/review failed to converge.
+- When triggered, `$sectioned-feature-development` is the authoritative workflow; do not duplicate its implementation, review, repair, integration, commit-cadence, or archival procedure in these Custom Instructions.
 - Stop any time when user decision is needed. 
 - Before editing, do a brief maintainability preflight only when the change touches persistence, security, routing, background jobs, concurrency, shared UI state, core services, more than 3 modules, roughly more than 150 lines, or an already-large coordinator/controller/view model.
 - If the preflight finds that a direct change would materially worsen a god object, unclear state owner, fragile state machine, circular dependency, duplicated logic, or under-tested core path, pause before editing. Explain the specific risk and recommend the smallest enabling refactor plus protective tests.

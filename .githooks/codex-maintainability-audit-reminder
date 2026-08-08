@@ -1,0 +1,69 @@
+#!/bin/sh
+set -eu
+
+if [ "${CODEX_MAINTAINABILITY_AUDIT_REMINDER:-1}" = "0" ]; then
+  exit 0
+fi
+
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null || true)
+if [ -z "$repo_root" ]; then
+  exit 0
+fi
+
+threshold=$(git -C "$repo_root" config --local --get codex.maintainabilityAuditInterval 2>/dev/null || true)
+if [ -z "$threshold" ]; then
+  threshold=$(git -C "$repo_root" config --global --get codex.maintainabilityAuditInterval 2>/dev/null || true)
+fi
+
+case "$threshold" in
+  ''|*[!0-9]*)
+    exit 0
+    ;;
+esac
+
+if [ "$threshold" -le 0 ]; then
+  exit 0
+fi
+
+head_commit=$(git -C "$repo_root" rev-parse --verify HEAD 2>/dev/null || true)
+if [ -z "$head_commit" ]; then
+  exit 0
+fi
+
+best_distance=
+
+marker_commit=$(git -C "$repo_root" log --fixed-strings --grep='Maintenance-Audit: true' --format=%H -n 1 2>/dev/null || true)
+if [ -n "$marker_commit" ] && git -C "$repo_root" merge-base --is-ancestor "$marker_commit" HEAD 2>/dev/null; then
+  best_distance=$(git -C "$repo_root" rev-list --count "${marker_commit}..HEAD" 2>/dev/null || true)
+fi
+
+baseline_commit=$(git -C "$repo_root" config --local --get codex.maintainabilityAuditBaseline 2>/dev/null || true)
+if [ -n "$baseline_commit" ] &&
+  git -C "$repo_root" cat-file -e "${baseline_commit}^{commit}" 2>/dev/null &&
+  git -C "$repo_root" merge-base --is-ancestor "$baseline_commit" HEAD 2>/dev/null; then
+  baseline_distance=$(git -C "$repo_root" rev-list --count "${baseline_commit}..HEAD" 2>/dev/null || true)
+  case "$baseline_distance" in
+    ''|*[!0-9]*)
+      ;;
+    *)
+      if [ -z "$best_distance" ] || [ "$baseline_distance" -lt "$best_distance" ]; then
+        best_distance=$baseline_distance
+      fi
+      ;;
+  esac
+fi
+
+case "$best_distance" in
+  ''|*[!0-9]*)
+    exit 0
+    ;;
+esac
+
+if [ "$best_distance" -lt "$threshold" ]; then
+  remaining=$((threshold - best_distance))
+  printf '[codex] 建议%s次后进行项目审计。\n' "$remaining" >&2
+else
+  printf '[codex] 上次审计是%s次前，建议尽快安排审计。\n' "$best_distance" >&2
+fi
+
+exit 0

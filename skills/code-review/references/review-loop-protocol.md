@@ -21,7 +21,7 @@ Use this protocol for a review that may repair findings and iterate. Its purpose
 
 ## Core Rule
 
-Perform exactly one full discovery pass per stable baseline. After repair, review only:
+Perform exactly one full discovery pass per stable baseline. A stable baseline may be an ordinary change, one frozen implementation section, or a final integrated feature range. After repair, review only:
 
 - The repair delta.
 - The semantic and operational impact cone invalidated by that delta.
@@ -58,10 +58,12 @@ Persist the state in `STATE.md` and `FINDINGS.md` for large or multi-round revie
 
 Use these round modes:
 
-- `FULL`: full discovery against a stable base/head.
+- `FULL`: full discovery against a stable ordinary base/head.
+- `SECTION`: full discovery for one frozen section base/head and contract.
 - `DELTA`: repair delta plus invalidated impact cone.
 - `RESET`: new full discovery because the baseline or semantics materially changed.
-- `FINAL`: fresh-context adversarial verification.
+- `INTEGRATION`: cross-section or full-feature composition review.
+- `FINAL`: fresh-context adversarial verification when it adds independent evidence.
 
 ## Roles
 
@@ -350,7 +352,7 @@ The final verifier should not redo every low-risk line. It should challenge the 
 
 - One `FULL` discovery round.
 - Up to three repair waves under normal conditions.
-- One `FINAL` fresh verification.
+- One `FINAL` fresh verification for a large ordinary review or final integration gate. It is optional for a section with no repair; after section repair, a successful independent `DELTA` verification normally suffices unless risk or a reset trigger justifies more.
 
 ### Hard cap
 
@@ -412,6 +414,8 @@ The agent must not close a finding because “I fixed it.” It must close it be
 ## Orchestrator Prompts
 
 ### Independent discovery
+
+For `SECTION` and `INTEGRATION` review packets, also follow `section-review-protocol.md`.
 
 ```text
 Review {working path}, [$code-review]({skill path}/SKILL.md)
