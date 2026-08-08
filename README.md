@@ -67,7 +67,41 @@ Hook 脚本已随仓库提供；clone 后在仓库根目录执行 `./scripts/ins
 - git提交语言、UI语言
 - ...... (它按我的要求自动创建完我还没审查)
 
-> 注：下面4个skill都是根据[Superpowers](https://github.com/obra/superpowers) [v5.1.0](https://github.com/obra/superpowers/releases/tag/v5.1.0)  做的 “Codex-native” 版本。没有照搬 Superpowers 是因为它的约束过重，对于Codex这样的高级智能体会浪费过多token，所以修改后的都是手动/条件触发，不是默认触发。
+#### [sectioned-feature-development](skills/sectioned-feature-development/)
+
+对于大功能，必须先制定完整计划，再分section实现，大致流程如下：
+
+```c
+skill sectioned_feature_development() {
+    使用 sol_max 创建完整计划;
+    for section in section数量 {
+        拆分section到单独的文件;
+        使用sol medium实现section;
+        while true {  // Code review循环
+            调用 sol_xhigh 使用 $code-review 进行审查;
+            if >5轮都发现了问题 {
+                if 当前已经递归拆分了>5轮 {
+                    要求用户选择继续拆分还是重新设计PLAN-FULL;
+                    return;
+                }
+                把当前代码备份到codex/backup/xxx;
+                撤销工作区所有修改;
+                使用 sol_max 拆分当前section;
+                break;  // 继续implementation循环
+            }
+            if 本轮和上一轮都没有发现问题 {
+                break;
+            }
+            if 发现问题 {
+                使用 sol_high 修复;
+            }
+        }
+    }
+}
+```
+
+
+> 注：下面3个skill都是根据[Superpowers](https://github.com/obra/superpowers) [v5.1.0](https://github.com/obra/superpowers/releases/tag/v5.1.0)  做的 “Codex-native” 版本。没有照搬 Superpowers 是因为它的约束过重，对于Codex这样的高级智能体会浪费过多token，所以修改后的都是手动/条件触发，不是默认触发。
 
 #### [manual-brainstorming](skills/manual-brainstorming/)
 
